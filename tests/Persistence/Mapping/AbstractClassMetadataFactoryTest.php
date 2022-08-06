@@ -84,6 +84,22 @@ final class AbstractClassMetadataFactoryTest extends DoctrineTestCase
         self::assertFalse($cmf->isTransient(get_class(new class () {
         })));
     }
+
+    public function testItGetsTheSameMetadataForBackslashedClassName(): void
+    {
+        $cmf = $this->getMockForAbstractClass(AbstractClassMetadataFactory::class);
+        $cmf
+            ->method('newClassMetadataInstance')
+            ->with(SomeOtherEntity::class)
+            ->willReturn(
+                $this->createMock(ClassMetadata::class)
+            );
+
+        /**
+         * @psalm-suppress ArgumentTypeCoercion
+         */
+        self::assertSame($cmf->getMetadataFor(SomeOtherEntity::class), $cmf->getMetadataFor('\\' . SomeOtherEntity::class));
+    }
 }
 
 class SomeGrandParentEntity
@@ -95,5 +111,9 @@ class SomeParentEntity extends SomeGrandParentEntity
 }
 
 final class SomeEntity extends SomeParentEntity
+{
+}
+
+final class SomeOtherEntity
 {
 }

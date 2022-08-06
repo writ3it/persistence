@@ -21,6 +21,7 @@ use function assert;
 use function class_exists;
 use function explode;
 use function is_array;
+use function ltrim;
 use function str_replace;
 use function strpos;
 use function strrpos;
@@ -215,6 +216,21 @@ abstract class AbstractClassMetadataFactory implements ClassMetadataFactory
     abstract protected function isEntity(ClassMetadata $class);
 
     /**
+     * Removes the prepended backslash of a class string to conform with how php outputs class names
+     *
+     * @psalm-param class-string $className
+     *
+     * @psalm-return class-string
+     */
+    private function normalizeClassName(string $className): string
+    {
+        /**
+         * @phpstan-ignore-next-line
+         */
+        return ltrim($className, '\\');
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @throws ReflectionException
@@ -222,6 +238,8 @@ abstract class AbstractClassMetadataFactory implements ClassMetadataFactory
      */
     public function getMetadataFor($className)
     {
+        $className = $this->normalizeClassName($className);
+
         if (isset($this->loadedMetadata[$className])) {
             return $this->loadedMetadata[$className];
         }
@@ -307,6 +325,8 @@ abstract class AbstractClassMetadataFactory implements ClassMetadataFactory
      */
     public function hasMetadataFor($className)
     {
+        $className = $this->normalizeClassName($className);
+
         return isset($this->loadedMetadata[$className]);
     }
 
@@ -315,13 +335,14 @@ abstract class AbstractClassMetadataFactory implements ClassMetadataFactory
      *
      * NOTE: This is only useful in very special cases, like when generating proxy classes.
      *
-     * {@inheritDoc}
+     * @psalm-param class-string $className
+     * @psalm-param CMTemplate $class
      *
      * @return void
      */
     public function setMetadataFor($className, $class)
     {
-        $this->loadedMetadata[$className] = $class;
+        $this->loadedMetadata[$this->normalizeClassName($className)] = $class;
     }
 
     /**
